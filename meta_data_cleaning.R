@@ -50,45 +50,13 @@ setdiff(proteomics_ID_list, metadata_ID_list)
 #^this should be zero, which it is 
 
 proteomics_in_metadata_merged_age <- merge(proteomics_in_metadata, combined, by="Barcode")
+proteomics_colnames <- colnames(proteomics_in_metadata_merged_age)
 
-proteomics_not_in_metadata_merged_aged <- proteomics_not_in_metadata %>% add_column(Adipose_mean_dage_resid_zscored = NA)  %>%
-  add_column(Adipose_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
-  add_column(Artery_mean_dage_resid_zscored = NA)  %>%
-  add_column(Artery_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
-  add_column(Brain_mean_dage_resid_zscored = NA)  %>%
-  add_column(Brain_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
-  add_column(Brain_PD_CV_all_mean_dage_resid_zscored = NA)  %>%
-  add_column(Complement_mean_dage_resid_zscored = NA)  %>%
-  add_column(CytoChemokine_mean_dage_resid_zscored = NA)  %>%
-  add_column(Esophagus_mean_dage_resid_zscored = NA)  %>%
-  add_column(Heart_mean_dage_resid_zscored = NA)  %>%
-  add_column(Heart_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
-  add_column(Immune_mean_dage_resid_zscored = NA)  %>%
-  add_column(Immune_all_mean_dage_resid_zscored = NA)  %>%
-  add_column(Immune_all_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
-  add_column(Immune_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
-  add_column(Intestine_mean_dage_resid_zscored = NA)  %>%
-  add_column(Intestine_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
-  add_column(Kidney_mean_dage_resid_zscored = NA)  %>%
-  add_column(Kidney_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
-  add_column(Liver_mean_dage_resid_zscored = NA)  %>%
-  add_column(Liver_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
-  add_column(Lung_mean_dage_resid_zscored = NA) %>%
-  add_column(Muscle_mean_dage_resid_zscored = NA) %>%
-  add_column(Muscle_Optimized_CV_all_mean_dage_resid_zscored = NA) %>%
-  add_column(Organismal_mean_dage_resid_zscored = NA) %>%
-  add_column(Organismal_me_andcorr_Optimized_CV_all_mean_dage_resid_zscored = NA) %>%
-  add_column(Organismal_Optimized_CV_all_mean_dage_resid_zscored = NA) %>%
-  add_column(Pancreas_mean_dage_resid_zscored = NA) %>%
-  add_column(Pancreas_Optimized_CV_all_mean_dage_resid_zscored = NA) %>%
-  add_column(Pituitary_mean_dage_resid_zscored = NA) %>%
-  add_column(Salivary_mean_dage_resid_zscored = NA) %>%
-  add_column(Salivary_Optimized_CV_all_mean_dage_resid_zscored = NA) %>%
-  add_column(Skin_mean_dage_resid_zscored = NA) %>%
-  add_column(Stomach_mean_dage_resid_zscored = NA) %>%
-  add_column(Stomach_Optimized_CV_all_mean_dage_resid_zscored = NA)
+missing_proteomics_colnames <- setdiff(proteomics_colnames, non_proteomics_colnames)
 
-proteomics_added_to_metadata_df <- rbind(proteomics_in_metadata_merged_age, proteomics_not_in_metadata_merged_aged)
+proteomics_not_in_metadata[ , missing_proteomics_colnames] <- NA
+
+proteomics_added_to_metadata_df <- rbind(proteomics_in_metadata_merged_age, proteomics_not_in_metadata)
 
 proteomics_distinct_rows <- distinct(proteomics_added_to_metadata_df) 
 
