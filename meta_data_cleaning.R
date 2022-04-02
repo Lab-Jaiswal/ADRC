@@ -1,24 +1,101 @@
 library(writexl)
-
 library(biomaRt)
 library(rtracklayer)
 library(GenomicRanges)
 library(readxl)
 library(magrittr)
 library(tidyverse)
-library(stringi)
+library(stringr)
+
 
 ##############################################################################################################
-################################-------GET COLUMN WITH ALL METADATA IDS-------################################
+##################################-------ADD CLOCK INFO TO METADATA-------####################################
 ##############################################################################################################
-metadata_file <-"/Users/maurertm/Desktop/Projects/ADRC/Metadata/Plasma_metadata_FINAL_052021_ADRC_additionalQC(2).csv"
-metadata_file <-"/Users/maurertm/Desktop/Plasma_metadata_FINAL_052021_ADRC_additionalQCs.csv"
-metadata_file <- "/Users/maurertm/Downloads/updated_metadata_file.csv"
+clock_metadata_file <-"/Users/maurertm/Downloads/ADRC_Enriched_TissueClocks_Means_2022-03-14.csv"
+clock_metadata <- read_csv(clock_metadata_file)
 
+unique_tissues <- clock_metadata$tissue %>% unique()
+
+unique_tissues_list <- c()
+
+for (i in unique_tissues) {
+  df <- filter(clock_metadata, tissue == i)
+  nam <- paste("df", i, sep = "_")
+  assign(nam, df)
+  unique_tissues_list[[nam]] <-df
+}
+unique_tissues_list_edited <- lapply(unique_tissues_list, function(df) select(df, -1))
+
+counter=0
+for (i in unique_tissues_list_edited){
+  counter = counter + 1
+  list_value<-names(unique_tissues_list_edited[counter])
+  zscore_val <- paste(list_value, "mean_dage_resid_zscored", sep="_")
+  colnames(unique_tissues_list_edited[[counter]])=c("Barcode", zscore_val)
+}
+
+combined <- reduce(unique_tissues_list_edited, full_join, by = "Barcode")
+
+colnames(combined)<-gsub("df_","",colnames(combined))
+
+metadata_file <-"/Users/maurertm/Downloads/MetaData.csv"
 metadata <- read_csv(metadata_file)
-metadata$index <- rownames(metadata)
 
-metadata_sample <- metadata %>% 
+proteomics_ID_list <- combined$Barcode
+metadata_ID_list <- metadata$Barcode
+
+proteomics_in_metadata <- filter(metadata, Barcode %in% proteomics_ID_list)
+proteomics_not_in_metadata <- filter(metadata, !Barcode %in% proteomics_ID_list)
+setdiff(proteomics_ID_list, metadata_ID_list)
+#^this should be zero, which it is 
+
+proteomics_in_metadata_merged_age <- merge(proteomics_in_metadata, combined, by="Barcode")
+
+proteomics_not_in_metadata_merged_aged <- proteomics_not_in_metadata %>% add_column(Adipose_mean_dage_resid_zscored = NA)  %>%
+  add_column(Adipose_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
+  add_column(Artery_mean_dage_resid_zscored = NA)  %>%
+  add_column(Artery_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
+  add_column(Brain_mean_dage_resid_zscored = NA)  %>%
+  add_column(Brain_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
+  add_column(Brain_PD_CV_all_mean_dage_resid_zscored = NA)  %>%
+  add_column(Complement_mean_dage_resid_zscored = NA)  %>%
+  add_column(CytoChemokine_mean_dage_resid_zscored = NA)  %>%
+  add_column(Esophagus_mean_dage_resid_zscored = NA)  %>%
+  add_column(Heart_mean_dage_resid_zscored = NA)  %>%
+  add_column(Heart_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
+  add_column(Immune_mean_dage_resid_zscored = NA)  %>%
+  add_column(Immune_all_mean_dage_resid_zscored = NA)  %>%
+  add_column(Immune_all_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
+  add_column(Immune_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
+  add_column(Intestine_mean_dage_resid_zscored = NA)  %>%
+  add_column(Intestine_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
+  add_column(Kidney_mean_dage_resid_zscored = NA)  %>%
+  add_column(Kidney_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
+  add_column(Liver_mean_dage_resid_zscored = NA)  %>%
+  add_column(Liver_Optimized_CV_all_mean_dage_resid_zscored = NA)  %>%
+  add_column(Lung_mean_dage_resid_zscored = NA) %>%
+  add_column(Muscle_mean_dage_resid_zscored = NA) %>%
+  add_column(Muscle_Optimized_CV_all_mean_dage_resid_zscored = NA) %>%
+  add_column(Organismal_mean_dage_resid_zscored = NA) %>%
+  add_column(Organismal_me_andcorr_Optimized_CV_all_mean_dage_resid_zscored = NA) %>%
+  add_column(Organismal_Optimized_CV_all_mean_dage_resid_zscored = NA) %>%
+  add_column(Pancreas_mean_dage_resid_zscored = NA) %>%
+  add_column(Pancreas_Optimized_CV_all_mean_dage_resid_zscored = NA) %>%
+  add_column(Pituitary_mean_dage_resid_zscored = NA) %>%
+  add_column(Salivary_mean_dage_resid_zscored = NA) %>%
+  add_column(Salivary_Optimized_CV_all_mean_dage_resid_zscored = NA) %>%
+  add_column(Skin_mean_dage_resid_zscored = NA) %>%
+  add_column(Stomach_mean_dage_resid_zscored = NA) %>%
+  add_column(Stomach_Optimized_CV_all_mean_dage_resid_zscored = NA)
+
+proteomics_added_to_metadata_df <- rbind(proteomics_in_metadata_merged_age, proteomics_not_in_metadata_merged_aged)
+
+proteomics_distinct_rows <- distinct(proteomics_added_to_metadata_df) 
+
+##############################################################################################################
+################################-------GET DFs WITH ALL METADATA IDS-------################################
+##############################################################################################################
+metadata_sample <- proteomics_distinct_rows %>% 
   dplyr::select(SampleId, ADRC_ID, PIDN) %>% 
   mutate(SampleId_nospace = sub(" .*", "", SampleId)) 
 
@@ -75,7 +152,7 @@ metadata_id_unnammed <- unname(metadata_id_list) %>% unlist()
 ##############################################################################################################
 ################################-------GET LIST WITH ALL GENOTYPED IDS-------#################################
 ##############################################################################################################
-#sample_list <- "/Users/maurertm/Downloads/files.txt"
+sample_list <- "/Users/maurertm/Downloads/files.txt"
 sample_list2 <- "/Users/maurertm/Downloads/files_R.tsv"
 
 samples<- read_tsv(sample_list, col_names=FALSE)
@@ -86,7 +163,7 @@ samples2 <- samples2[2:502, 2]
 samples_unique2 <- samples2 %>% unique()
 colnames(samples_unique2) <- "X1"
 
-setdiff(samples_unique, samples_unique2)
+setdiff(samples_unique, samples_unique2) %>% unique()
 
 #remove the underscore
 #samples_unique$X2 <- str_remove_all(samples_unique$X1, "^0")
@@ -125,7 +202,7 @@ PIDN_matched <- PIDN_matched %>%
   mutate(PIDN_ID = ifelse(!grepl("3900", ID), paste0("0", ID), ID))
 PIDN_no_matched <- metadata_ids %>% filter(match == 0 & grepl("PIDN", index_val))
 PIDN_no_matched$PIDN_ID <- NA
-PIDN_combined <- rbind(PIDN_matched, PIDN_no_match) %>% select(index, PIDN_ID)
+PIDN_combined <- rbind(PIDN_matched, PIDN_no_matched) %>% select(index, PIDN_ID)
 
 
 ADRC_matched <- metadata_ids %>% filter(match == 1 & grepl("ADRC", index_val))
@@ -146,9 +223,10 @@ SI_combined <- rbind(SI_matched, SI_no_matched) %>% select(index, SI_ID)
 PIDN_ADRC <- merge(PIDN_combined, ADRC_combined, by="index")
 
 complete_ID <- merge(PIDN_ADRC, SI_combined, by="index")
+
 #complete_ID[is.na(complete_ID)] <- 0
 
-grouped_metadata_index <- aggregate(match ~ index, metadata_index, sum)
+#grouped_metadata_index <- aggregate(match ~ index, metadata_index, sum)
 
 cols <- c('PIDN_ID' , 'ADRC_ID' , 'SI_ID')
 complete_ID$SCG_IDs<- apply( complete_ID[ , cols ] , 1 , paste , collapse = " " )
@@ -159,39 +237,15 @@ complete_merged<- complete_ID %>%
   select(index, SCG_ID, sequenced) %>%
   merge(grouped_metadata_index, by = "index")
 
+complete_edited <- complete_merged %>%
+  mutate(SCG_IDs = ifelse(grepl("'^T'", SCG_ID), substring(SCG_ID, 2), SCG_ID)) %>%
+  separate(SCG_IDs, into = c("SCG_ID1", "SCG_ID2"), sep = " (?=[^ ]+$)") %>%
+  select(index, SCG_ID1, sequenced, match)
 
-annotated_metadata <- merge(complete_merged, metadata, by = "index")
+#all SCG1 = SCG2
 
-write_tsv(data.frame(annotated_metadata), "/Users/maurertm/Desktop/Projects/ADRC/annotated_metadata.tsv")
+proteomics_distinct_rows$index <- rownames(proteomics_distinct_rows)
 
-group_and_concat <- annotated_metadata %>%
-  dplyr::select(match, SampleId,	Individual_ID,	Age,	ADRC_ID,PIDN,	Visit,	Gender,	Diagnosis_group, Diagnosis_consensus,Date.of.draw,	Study) %>% 
-  group_by(Individual_ID) %>%
-  mutate(SampleIds = paste(SampleId, collapse = ", ")) %>%
-  mutate(Ages = paste(Age, collapse = ", ")) %>%
-  mutate(ADRC_IDs = paste(ADRC_ID, collapse = ", ")) %>% 
-  mutate(PIDNs = paste(PIDN, collapse = ", ")) %>% 
-  mutate(Visits = paste(Visit, collapse = ", ")) %>% 
-  mutate(Diagnoses_consensus = paste(Diagnosis_consensus, collapse = ", ")) %>% 
-  mutate(Diagnosis_groups = paste(Diagnosis_group, collapse = ", ")) %>% 
-  mutate(Date.of.draws = paste(Date.of.draw, collapse = " | ")) %>% 
-  mutate(Studies = paste(Study, collapse = ", ")) %>% 
-  mutate(Ages = paste(SCG_ID, collapse = ", ")) %>%
-  mutate(matches = paste(match, collapse = "")) 
+annotated_metadata <- merge(complete_edited, proteomics_distinct_rows, by = "index")
 
-
-group_and_concats <- group_and_concat %>% dplyr::select(matches, Individual_ID, SampleIds, ADRC_IDs, PIDNs, Ages, Gender, Visits, Diagnosis_group, Diagnoses_consensus, Date.of.draws, Studies)
-
-group_and_concats$genotyped <- ifelse(grepl("1|2", group_and_concats$matches), "yes", "no")
-group_and_concats <- mutate(group_and_concats, Num_Visits = str_count(Visits, ',') + 1)
-
-nrow(unique(group_and_concats))
-unique_grouped <- unique(group_and_concats)
-
-group_and_concats <- group_and_concat %>% dplyr::select(Individual_ID, SampleIds, ADRC_IDs, PIDNs, genotyped, Ages, Gender, Num_Visits, Diagnoses_consensus, Date.of.draw, Studies)
-write_tsv(data.frame(unique_grouped), "/Users/maurertm/Desktop/Projects/ADRC/annotated_grouped_metadata.tsv")
-
-C_numeric <- lapply(samples_ADRC, as.numeric)
-samples_ADRC_numeric_unnammed <- unname(samples_ADRC_numeric) %>% unlist()
-
-
+write_tsv(data.frame(annotated_metadata), "/Users/maurertm/Desktop/Projects/ADRC/annotated_metadata_April_1.tsv")
