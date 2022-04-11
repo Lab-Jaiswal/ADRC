@@ -13,7 +13,7 @@ library(stringr)
 ##############################################################################################################
 #the clock metadata file has three columns: tissue, id (428 unique), and mean_dage_resid_zscored
 #I want to have one row per sample id, which contians all of the mean residual zscores for each tissue (each in a seperate column)
-clock_metadata_file <-"filepath"
+clock_metadata_file <-""/Users/maurertm/Desktop/Projects/ADRC/Metadata/ADRC_Enriched_TissueClocks_Means_2022-03-14.csv""
 clock_metadata <- read_csv(clock_metadata_file)
 proteomics <- pivot_wider(clock_metadata, names_from = "tissue", values_from = "mean_dage_resid_zscored")
 colnames(proteomics)[1] <- "Barcode"
@@ -25,7 +25,6 @@ metadata_file <-"/Users/maurertm/Desktop/Projects/ADRC/Metadata/Plasma_metadata_
 metadata <- read_csv(metadata_file)
 
 metadata_proteomics <- left_join(metadata, proteomics)
-
 
 ##############################################################################################################
 ################################-------GET LIST WITH ALL GENOTYPED IDS-------#################################
