@@ -1,14 +1,7 @@
-library(biomaRt)
-library(rtracklayer)
-library(GenomicRanges)
 library(readxl)
-library(broom)
 library(magrittr)
-library(tidyverse)
 library(stringr)
-library(boot)
-
-install.packages("boot")
+library(tidyverse)
 
 choose_best <- function(metadata_rows, metadata_df) { 
   arrange(metadata_rows, desc(ConnectivityZscore)) %>% slice(1)
