@@ -1,5 +1,8 @@
 library(lme4)
 library(lmerTest)
+library(broom)
+library(RNOmni)
+
 
 library(writexl)
 library(readxl)
@@ -29,7 +32,7 @@ metadata_CHIP_long_control <- filter(metadata_CHIP_long, chip_class2 == "Control
 metadata_CHIP_long_cases <- filter(metadata_CHIP_long, chip_class2 != "Control")
 
 ##############################################################################################
-##################-----Discover and Remove Significant Hidden Factors-----####################
+########################-----Analyze with Mixed Effect Model-----#############################
 ##############################################################################################
 fit_lmer_chip_class <- function(metadata_cases, metadata_df, metadata_controls) {
   metadata_controls_filter <- filter(metadata_controls, clock == metadata_df$clock) %>%
