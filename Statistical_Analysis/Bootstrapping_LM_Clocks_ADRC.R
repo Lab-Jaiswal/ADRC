@@ -14,10 +14,7 @@ find_closest_age <- function(dataframe, grouped_df) {
 ##############################################################################################
 #################################-----Define Data Paths-----##################################
 ##############################################################################################
-
-
 CHIP_Phen_Clocks_filepath <- "/Users/maurertm/Desktop/Chip_Phen_Clocks.csv"
-proteome_filepath <- "/Users/maurertm/Desktop/dataProt_SS-205063.hybNorm.medNormInt.plateScale.calibrate.anmlQC.qcCheck.anmlSMP_ADRC_Feb2021.csv"
 
 ##############################################################################################
 ###########################-----Import, Clean, and Filter Data-----###########################
