@@ -20,6 +20,10 @@ widen_df <- function(column_name, subject_rows) {
   subject_rows_wider
 }
 
+choose_largest_vaf <- function(subject_rows, subject_df) {
+  arrange(subject_rows, desc(tumor_f)) %>% slice(1)
+}
+
 squash_multiple_variants <- function(subject_rows, subject_df) {
   temp_ids <- str_c(subject_df$Sample[1], 1:nrow(subject_rows), sep = "_")
   subject_rows$ID <- temp_ids
@@ -264,22 +268,31 @@ mutect_results <- bind_rows(has_CHIP_df, no_CHIP_df)
 #results labled somatic have been judged  by Sidd to have CHIP
 results_wo_CHIP <- mutect_results %>% filter(CHIP == 0)
 
-results_with_CHIP <- mutect_results %>% filter(CHIP == 1) %>% select(Sample, Hugo_Symbol, Variant_Classification, Protein_Change, tumor_f) %>% distinct
+results_with_CHIP <- mutect_results %>% filter(CHIP == 1) %>% select(Sample, Hugo_Symbol, Variant_Classification, Protein_Change, tumor_f, t_ref_count, t_alt_count) %>% distinct
 
 #need to deal with if people have multiple mutatiosn
 results_n_mutations <- group_by(results_with_CHIP, Sample) %>% tally %>% arrange(desc(n))
 results_n_multiple <- filter(results_n_mutations, n > 1)
 
 results_multiple <- filter(mutect_results, is_in(Sample, results_n_multiple$Sample)) %>% arrange(Sample) 
+
+results_multiple_largest_vaf <- results_multiple %>% group_by(Sample) %>% group_modify(choose_largest_vaf) %>%
+select("Sample", "Hugo_Symbol", "tumor_f", "t_ref_count", "t_alt_count")
+
+colnames(results_multiple_largest_vaf) <- c("Sample", "Largest_VAF", "Multiple_VAF", "Multiple_t_ref", "Multiple_t_alt")
+
 results_multiple_squashed <- group_by(results_multiple, Sample) %>% group_modify(squash_multiple_variants) %>%
-  select(Sample, contains("Hugo_Symbol"), contains("Variant_Classification"), contains("Protein_Change"), contains("tumor_f"))
+  select(Sample, contains("Hugo_Symbol"), contains("Variant_Classification"), contains("Protein_Change"), contains("tumor_f"), contains("t_ref"), contains("t_alt"))
 results_multiple_squashed$chip_class <- "Multiple"
 results_multiple_squashed$CHIP <- 1
+#results_multiple_squashed[3,26] <- "TET2"
+
+results_multiple_squashed_joined <- left_join(results_multiple_largest_vaf, results_multiple_squashed, by = "Sample")
 
 results_single <- filter(mutect_results, !is_in(Sample, results_n_multiple$Sample)) %>% arrange(Sample) 
 results_single$chip_class <- results_single$Hugo_Symbol
 
-mutect_results_all <- bind_rows(results_multiple_squashed, results_single)
+mutect_results_all <- bind_rows(results_multiple_squashed_joined, results_single)
 mutect_results_all$filename <- mutect_results_all$Sample %>% str_remove_all("^0") %>% str_remove_all("_.*$") 
 mutect_results_all <- transform(mutect_results_all, filename = as.numeric(filename))
 
