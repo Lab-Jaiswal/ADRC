@@ -50,6 +50,9 @@ Mutect_results_with_CHIP_filepath <- "/Users/maurertm/Desktop/mutect_somatic_042
 
 Yanns_metadata_filepath <- "/Users/maurertm/Desktop/Yanns_MetaData2.csv"
 
+vcf_header_incorrect_names <- "/Users/maurertm/Desktop/whole_exome_normal_headers_list.txt"
+vcf_header_normal_names <- "/Users/maurertm/Desktop/whole_exome_incorrect_headers_list.txt"
+
 ##############################################################################################
 ####################-########----Load and Combine Clock Data-----#############################
 ##############################################################################################
@@ -146,10 +149,24 @@ colnames(phenotype_clocks)[16] <- "WGS_Study"
 chip_carriers <- read_tsv(chip_carriers_filepath) %>% as.tibble
 non_chip_carriers <- read_tsv(non_chip_carriers_filepath) %>% as.tibble
 
+incorrect_ids <- read_tsv(vcf_header_incorrect_names, col_names = FALSE)
+normal_ids <- read_tsv(vcf_header_normal_names, col_names = FALSE)
+
+filenames_vcf_ids <- bind_rows(incorrect_ids, normal_ids)
+filenames_vcf_ids <- filenames_vcf_ids %>% mutate(Sample = gsub(".hg38_GRCh38_mutect2.vcf", "", X1))
+
 colnames(chip_carriers) <- "Sample"
 colnames(non_chip_carriers) <- "Sample"
 
-combined_sequenced_list <- rbind(chip_carriers, non_chip_carriers)
+combined_sequenced_list <- rbind(chip_carriers, non_chip_carriers) %>% distinct
+
+setdiff(as.numeric(combined_sequenced_list$Sample), as.numeric(filenames_vcf_ids$Sample))
+#"0428"    "0449"    "0881"    "0894"    "0919"    "1065"    "1095"    "3900049" "3900131" "3900227" "3900294"
+#"3900295" "3900318" "3900357" "3900358" "3900379" "3900385" "3900388" "3900393" "3900394" "3900400" "3900402"
+setdiff(filenames_vcf_ids$Sample, combined_sequenced_list$Sample)
+#character(0)
+
+complete_scg_id_df <- left_join(combined_sequenced_list, filenames_vcf_ids, by = "Sample")
 
 #some of the files are not labeled by any recognized id in the phenotype or clock data (I call these the "BAM/BAI mystery ids")
 #these files originally  came insets of folders, where the folders was named with the subjects ADRC id. Within each folder, the bam/ bai files were named with the "BAM/BAI mystery id"
@@ -158,25 +175,34 @@ combined_sequenced_list <- rbind(chip_carriers, non_chip_carriers)
 new_ADRC_table <- read_excel(new_ADRC_table_filepath)
 colnames(new_ADRC_table) <- c("ADRC_ID", "BAM_BAI_ID", "first", "Sample", "last" )
 ADRC_key <- select(new_ADRC_table, ADRC_ID, Sample)
+ADRC_key$Sample <- as.numeric(ADRC_key$Sample)
 mystery_bam_bais <- ADRC_key %>% pull(Sample)
 new_bams_ADRC_IDs <- ADRC_key %>% select(ADRC_ID)
 colnames(new_bams_ADRC_IDs) <- "Sample"
 
 #split the combined sequence
-old_ids <- filter(combined_sequenced_list, !is_in(Sample, mystery_bam_bais)) 
-new_ids <- filter(combined_sequenced_list, is_in(Sample, mystery_bam_bais)) %>% distinct 
+new_ids <- filter(complete_scg_id_df, is_in(Sample, mystery_bam_bais)) %>% distinct 
+new_ids$Sample <- as.numeric(new_ids$Sample)
+setdiff(new_ids$Sample, ADRC_key$Sample)
+setdiff(ADRC_key$Sample, new_ids$Sample)
+
+new_ids_joined <- left_join(new_ids, ADRC_key, by="Sample") %>% select(-Sample)
+colnames(new_ids_joined) <- c("name_of_file", "vcf_sample_header", "Sample")
+
+old_ids <- filter(complete_scg_id_df, !is_in(Sample, mystery_bam_bais)) 
+colnames(old_ids) <- c("Sample", "name_of_file", "vcf_sample_header")
 
 #replace the old mystery ids with their corresponding ADRC_IDs
-updated_ids <- rbind(old_ids, new_bams_ADRC_IDs) %>% distinct
+updated_ids <- rbind(old_ids, new_ids_joined) %>% distinct
 
 #remove the underscore and leading zeros
 updated_ids$no_leading_zero <- str_remove_all(updated_ids$Sample, "^0")
 
 samples_unique <-  mutate(updated_ids, no_underscore = sub("\\_.*", "", no_leading_zero)) 
 
-genotypes <- dplyr::select(samples_unique, no_underscore)
-colnames(genotypes) <- "ID"
-WGS_sample_list <- genotypes %>% select(ID) %>% as.list
+genotypes <- dplyr::select(samples_unique, no_underscore, name_of_file, vcf_sample_header)
+colnames(genotypes) <- c("filename", "name_of_vcf", "vcf_sample_header")
+WGS_sample_list <- genotypes %>% select(filename) %>% as.list
 
 ##############################################################################################
 #############-----Get Column with SCG_ID (aka filename) in phenotype_clocks-----##############
@@ -193,25 +219,23 @@ phenotype_clocks$ADRC_ID_cleaned <- str_remove_all(phenotype_clocks$ADRC_ID, "^0
 #create columns called PIDN_files, SampleID_files, ADRC_files that contain the id in scg (WGS id)
 #if these columns are NA it means that ID pattern is not present in the scg/ WGS ids
 phenotype_clocks$PIDN_files <- phenotype_clocks$PIDN_cleaned
-phenotype_clocks$PIDN_files[!is_in(phenotype_clocks$PIDN_files, genotypes$ID)] <- NA
-intersect(genotypes$ID, phenotype_clocks$PIDN_cleaned)
+phenotype_clocks$PIDN_files[!is_in(phenotype_clocks$PIDN_files, genotypes$filename)] <- NA
+intersect(genotypes$filename, phenotype_clocks$PIDN_cleaned)
 
 phenotype_clocks$SampleID_files <- phenotype_clocks$SampleID_cleaned
-phenotype_clocks$SampleID_files[!is_in(phenotype_clocks$SampleID_files, genotypes$ID)] <- NA
-intersect(genotypes$ID, phenotype_clocks$SampleID_cleaned)
+phenotype_clocks$SampleID_files[!is_in(phenotype_clocks$SampleID_files, genotypes$filename)] <- NA
+intersect(genotypes$filename, phenotype_clocks$SampleID_cleaned)
 
 
 phenotype_clocks$ADRC_ID_files <- phenotype_clocks$ADRC_ID_cleaned
-phenotype_clocks$ADRC_ID_files[!is_in(phenotype_clocks$ADRC_ID_files, genotypes$ID)] <- NA
-intersect(genotypes$ID, phenotype_clocks$ADRC_ID_cleaned)
+phenotype_clocks$ADRC_ID_files[!is_in(phenotype_clocks$ADRC_ID_files, genotypes$filename)] <- NA
+intersect(genotypes$filename, phenotype_clocks$ADRC_ID_cleaned)
 
 #these are the data in scg (the WGS data) that is not in the metadata file Jarod provided
-#notice there are about 9- this is what we expect
-genotypes$missing_temp <- !is_in(genotypes$ID, phenotype_clocks$PIDN_cleaned) & !is_in(genotypes$ID, phenotype_clocks$SampleID_cleaned) & !is_in(genotypes$ID, phenotype_clocks$ADRC_ID_cleaned)
+#notice there are about 11- this is what we expect
+genotypes$missing_temp <- !is_in(genotypes$filename, phenotype_clocks$PIDN_cleaned) & !is_in(genotypes$filename, phenotype_clocks$SampleID_cleaned) & !is_in(genotypes$filename, phenotype_clocks$ADRC_ID_cleaned)
 
 missing_WGS_in_metadata <- filter(genotypes, missing_temp == TRUE) %>% pull(ID)
-
-
 
 #create a column called filename that contains the scg/ WGS id
 phenotype_clocks_with_filenames <- rowwise(phenotype_clocks) %>% group_map(get_unique_value) %>% bind_rows
@@ -238,6 +262,8 @@ phenotype_clocks_with_filenames$has_WGS_AND_clock_data <- phenotype_clocks_with_
 
 phenotype_clocks_with_filenames %>% filter(has_WGS_AND_clock_data) %>% pull(Individual_ID) %>% unique()
 
+phenotype_clocks_with_genotypes <- left_join(phenotype_clocks_with_filenames, genotypes, by = "filename")
+
 ##############################################################################################
 ############################-----Import and Clean Mutect Data-----############################
 ##############################################################################################
@@ -257,7 +283,7 @@ colnames(updated_new_ids_with_CHIP)[33] <- "Sample"
 has_CHIP_df <- rbind(updated_new_ids_with_CHIP, old_ids)
 has_CHIP_df$CHIP <- 1
 
-no_CHIP <- setdiff(genotypes$ID, has_CHIP_df$Sample)
+no_CHIP <- setdiff(genotypes$filename, has_CHIP_df$Sample)
 no_CHIP_df <- tibble(Sample = no_CHIP, CHIP = 0) %>% transform(Sample = as.numeric(Sample))
 
 mutect_results <- bind_rows(has_CHIP_df, no_CHIP_df)
@@ -277,7 +303,7 @@ results_n_multiple <- filter(results_n_mutations, n > 1)
 results_multiple <- filter(mutect_results, is_in(Sample, results_n_multiple$Sample)) %>% arrange(Sample) 
 
 results_multiple_largest_vaf <- results_multiple %>% group_by(Sample) %>% group_modify(choose_largest_vaf) %>%
-select("Sample", "Hugo_Symbol", "tumor_f", "t_ref_count", "t_alt_count")
+  select("Sample", "Hugo_Symbol", "tumor_f", "t_ref_count", "t_alt_count")
 
 colnames(results_multiple_largest_vaf) <- c("Sample", "Largest_VAF", "Multiple_VAF", "Multiple_t_ref", "Multiple_t_alt")
 
@@ -301,21 +327,21 @@ table(mutect_results_all$chip_class) %>% sort
 ##############################################################################################
 ####################-----BIND MUTECT DATA WITH PHEN/CLOCK DATA-----###########################
 ##############################################################################################
-setdiff(phenotype_clocks_with_filenames$filename, mutect_results_all$filename)
+setdiff(phenotype_clocks_with_genotypes$filename, mutect_results_all$filename)
 #NA
-missing_CHIP_filenames <- setdiff(mutect_results_all$filename, phenotype_clocks_with_filenames$filename)
+missing_CHIP_filenames <- setdiff(mutect_results_all$filename, phenotype_clocks_with_genotypes$filename)
 # [1]     583     415     449     465     474     563     565     584     610     931 3900308
 
-setdiff(missing_CHIP_filenames, phenotype_clocks_with_filenames$ADRC_ID_cleaned)
-setdiff(missing_CHIP_filenames, phenotype_clocks_with_filenames$SampleID_cleaned)
-setdiff(missing_CHIP_filenames, phenotype_clocks_with_filenames$PIDN_cleaned)
+setdiff(missing_CHIP_filenames, phenotype_clocks_with_genotypes$ADRC_ID_cleaned)
+setdiff(missing_CHIP_filenames, phenotype_clocks_with_genotypes$SampleID_cleaned)
+setdiff(missing_CHIP_filenames, phenotype_clocks_with_genotypes$PIDN_cleaned)
 # [1]     583     415     449     465     474     563     565     584     610     931 3900308
 
 #we will filter out the missing ids and then add them in seperatly (as they are joining on a different column)
 mutect_results_filtered <- filter(mutect_results_all, !is_in(filename, missing_CHIP_filenames))
 mutect_results_filtered <- transform(mutect_results_filtered, filename = as.character(filename))
 
-CHIP_phen_clocks <- left_join(phenotype_clocks_with_filenames, mutect_results_filtered, by = "filename")
+CHIP_phen_clocks <- left_join(phenotype_clocks_with_genotypes, mutect_results_filtered, by = "filename")
 
 #check that the number of rows in the new file is unchanged from proteomics_metadata_filename
 nrow(CHIP_phen_clocks) - nrow(phenotype_clocks_with_filenames)
@@ -340,3 +366,4 @@ CHIP_phen_clocks$Age_at_Draw_Difference <- CHIP_phen_clocks$Age_at_WGS_Draw - CH
 
 #save final df
 write_csv(CHIP_phen_clocks, "/Users/maurertm/Desktop/Chip_Phen_Clocks.csv")
+
