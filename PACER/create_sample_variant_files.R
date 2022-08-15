@@ -81,7 +81,7 @@ sample_df <- sample_df %>% filter(!is_in(Sample, c("Stanford_0563", "Stanford_05
 
 
 variant_df <- combined_metadata_final %>% select(Sample, Gene, AD, VAF)
-colnames(sample_df) <- c("Sample", "Gene", "AD", "VAF")
+colnames(variant_df) <- c("Sample", "Gene", "AD", "VAF")
 variant_df <- variant_df %>% filter(!is_in(Sample, c("Stanford_0563", "Stanford_0583")))
 
 ##############################################################################################
