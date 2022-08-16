@@ -52,7 +52,9 @@ metadata <- read_csv(metadata_filepath) %>% filter(has_WGS_AND_clock_data == 1) 
 Multiple_carriers <- filter(metadata, chip_class == "Multiple")
 count_max_genes <- metadata %>% select(contains("Hugo")) %>% ncol
 
-Multiple_carriers_long <- combined_split_genes(combined_split_genes, 4) %>%
+dataframe <- Multiple_carriers
+
+Multiple_carriers_long <- combined_split_genes(Multiple_carriers, 4) %>%
   bind_rows(.id = "Mutation_Number") %>% select(-Mutation_number) %>%
   filter(!is.na(VAF))
 
@@ -77,12 +79,11 @@ combined_metadata_final <- combined_metadata %>% select(vcf_sample_header, INFER
 sample_df <- combined_metadata_final %>% filter(is.na(Mutation_number) | Mutation_number == 1) %>% select(Sample, INFERRED_SEX, Gene, haschip)
 sample_df$Study <- "ADRC"
 colnames(sample_df) <- c("Sample", "INFERRED_SEX", "Gene", "haschip", "STUDY")
-sample_df <- sample_df %>% filter(!is_in(Sample, c("Stanford_0563", "Stanford_0583")))
-
+sample_df <- sample_df %>% filter(!is_in(Sample, c("Stanford_0563", "Stanford_0583"))) %>% distinct
 
 variant_df <- combined_metadata_final %>% select(Sample, Gene, AD, VAF)
 colnames(variant_df) <- c("Sample", "Gene", "AD", "VAF")
-variant_df <- variant_df %>% filter(!is_in(Sample, c("Stanford_0563", "Stanford_0583")))
+variant_df <- variant_df %>% filter(!is_in(Sample, c("Stanford_0563", "Stanford_0583"))) %>% distinct
 
 ##############################################################################################
 ##############################-----Output Metadata DFs-----###################################
