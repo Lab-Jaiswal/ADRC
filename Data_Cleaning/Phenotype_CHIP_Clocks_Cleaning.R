@@ -36,22 +36,22 @@ squash_multiple_variants <- function(subject_rows, subject_df) {
 #################################-----Define Data Paths-----##################################
 ##############################################################################################
 #Import clock data from the 4 different ADRC studies
-Wagner_filepath <- "/Users/maurertm/Desktop/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_WAGNER_RAW_Age_prediction_mean_results.csv"
-Poston_filepath <- "/Users/maurertm/Desktop/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_POSTON_RAW_Age_prediction_mean_results.csv"
-Kercher_filepath <- "/Users/maurertm/Desktop/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_KERCHNER_RAW_Age_prediction_mean_results.csv"
-ADRC_filepath <- "/Users/maurertm/Desktop/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_ADRC_RAW_Age_prediction_mean_results.csv"
+Wagner_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/csv_txt_outputs/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_WAGNER_RAW_Age_prediction_mean_results.csv"
+Poston_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/csv_txt_outputs/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_POSTON_RAW_Age_prediction_mean_results.csv"
+Kercher_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/csv_txt_outputs/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_KERCHNER_RAW_Age_prediction_mean_results.csv"
+ADRC_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/csv_txt_outputs/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_ADRC_RAW_Age_prediction_mean_results.csv"
 
-phen_metadata_filepath <- "/Users/maurertm/Desktop/Plasma_metadata_FINAL_052021_ADRC_additionalQC_new.csv"
-chip_carriers_filepath <- "/Users/maurertm/Desktop/chip_carriers.txt"
-non_chip_carriers_filepath <- "/Users/maurertm/Desktop/non_chip_carriers.txt"
-new_ADRC_table_filepath <- "/Users/maurertm/Desktop/New_ADRC_Key.xlsx"
+phen_metadata_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/PACER/Plasma_metadata_FINAL_052021_ADRC_additionalQC_new.csv"
+chip_carriers_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/chip_carriers.txt"
+non_chip_carriers_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/non_chip_carriers.txt"
+new_ADRC_table_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/PACER/New_ADRC_Key.xlsx"
 
-Mutect_results_with_CHIP_filepath <- "/Users/maurertm/Desktop/mutect_somatic_042822.csv"
+Mutect_results_with_CHIP_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/PACER/mutect_somatic_042822.csv"
 
-Yanns_metadata_filepath <- "/Users/maurertm/Desktop/Yanns_MetaData2.csv"
+Yanns_metadata_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/Metadata/Yanns_MetaData2.csv"
 
-vcf_header_incorrect_names <- "/Users/maurertm/Desktop/whole_exome_normal_headers_list.txt"
-vcf_header_normal_names <- "/Users/maurertm/Desktop/whole_exome_incorrect_headers_list.txt"
+vcf_header_incorrect_names <- "/Users/maurertm/Desktop/Projects/ADRC/csv_txt_outputs/whole_exome_normal_headers_list.txt"
+vcf_header_normal_names <- "/Users/maurertm/Desktop/Projects/ADRC/csv_txt_outputs/whole_exome_incorrect_headers_list.txt"
 
 ##############################################################################################
 ####################-########----Load and Combine Clock Data-----#############################
@@ -150,6 +150,9 @@ chip_carriers <- read_tsv(chip_carriers_filepath) %>% as.tibble
 non_chip_carriers <- read_tsv(non_chip_carriers_filepath) %>% as.tibble
 
 incorrect_ids <- read_tsv(vcf_header_incorrect_names, col_names = FALSE)
+incorrect_ids[c('X1', 'X2')] <- str_split_fixed(incorrect_ids$X1, ' ', 2)
+incorrect_ids <- as.data.frame(sapply(incorrect_ids, function(x) gsub("\"", "", x)))
+
 normal_ids <- read_tsv(vcf_header_normal_names, col_names = FALSE)
 
 filenames_vcf_ids <- bind_rows(incorrect_ids, normal_ids)
