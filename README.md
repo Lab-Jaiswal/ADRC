@@ -20,7 +20,6 @@
                     1. In some cases, the vcf header name does not match the file name
                          * To fix this, the following two files are necesssary: whole_exome_incorrect_headers_list.txt and whole_exome_normal_headers_list.txt
                     2. In others, the file name does not match any identifiers in the provided phenotype metadata with using a "key" given from the ADRC
-               * 
-     * Phenotype Metadata: <br />
+                         * New_ADRC_Key.xlsx
      * Mutect2 Results:  <br />
-     * 
+          * mutect_somatic_042822.csv
