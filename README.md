@@ -1,6 +1,6 @@
 # ADRC Analysis
 ## Data Sources
-* Once you have been approved to recieve the data from the ADRC, @maurermaggie will share the approved files with you. We are currently performing analyses on the following files <br />
+* Once you have been approved to recieve the data from the ADRC, @maurermaggie will share the approved files with you <br />
 * All of the following files have been de-identified
 #### Aging Clock Data
 * All have filepaths "df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60" + : <br />
