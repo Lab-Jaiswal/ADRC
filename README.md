@@ -26,3 +26,18 @@
           * To fix this, the following two files are necesssary: whole_exome_incorrect_headers_list.txt and whole_exome_normal_headers_list.txt
      2. In others, the file name does not match any identifiers in the provided phenotype metadata with using a "key" given from the ADRC
           * New_ADRC_Key.xlsx
+
+## Data Processing
+* Because of the multi-study nature of this project, many people have multiple IDs. 
+    * Some IDs are *sample specific*
+    * Some IDs are *study specific*
+    * Some IDs, due to incorrect clinical reporting (and the fact that people were enrolled in multiple studies at once), are not sample or study specific
+
+| Sample_ID1        | Sample_ID2           | Sample_ID3  | Study | 
+|  :---:            | :---:                | :---:       | :---: | 
+| 100               | 0A50                 | 100         | Alpha |
+| 100               | 0B75                 | 7776        | Beta  |
+| 200               | 0A51                 | 200         | Alpha |
+| 200               | 0B76                 | 8998        | Beta  |
+
+Here, Sample_ID1 is *sample specific*, Sample_ID2 is *study specific*, and Sample_ID3 is neither. Unfortunately, most of the IDs given resembled Sample_ID3 and none adequately captured all of the study participants. Because of this, I reccomend using the column labled `filename`. If you insist on using the other IDs in the CHIP
