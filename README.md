@@ -24,3 +24,9 @@ The dataframe created in Phenotype_CHIP_Clocks_Cleaning.R is derived from 12 dat
            * New_ADRC_Key.xlsx
 #### Mutect2 Results
 * mutect_somatic_042822.csv
+
+#### Blood Plasma Proteome Data
+* dataProt_SS-205063.hybNorm.medNormInt.plateScale.calibrate.anmlQC.qcCheck.anmlSMP_ADRC_Feb2021.csv
+
+#### CSF Plasma Proteome Data
+* datProt_SS-205083_v4_CSF.hybNorm.medNormInt.plateScale.calibrate.medNormRefSMP.csv
