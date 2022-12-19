@@ -36,22 +36,22 @@ squash_multiple_variants <- function(subject_rows, subject_df) {
 #################################-----Define Data Paths-----##################################
 ##############################################################################################
 #Import clock data from the 4 different ADRC studies
-Wagner_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/csv_txt_outputs/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_WAGNER_RAW_Age_prediction_mean_results.csv"
-Poston_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/csv_txt_outputs/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_POSTON_RAW_Age_prediction_mean_results.csv"
-Kercher_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/csv_txt_outputs/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_KERCHNER_RAW_Age_prediction_mean_results.csv"
-ADRC_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/csv_txt_outputs/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_ADRC_RAW_Age_prediction_mean_results.csv"
+Wagner_filepath <- "/Users/maurertm/Desktop/ADRC_Project/ADRC_Make_Final_DataFrame/Clock_Data/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_WAGNER_RAW_Age_prediction_mean_results.csv"
+Poston_filepath <- "/Users/maurertm/Desktop/ADRC_Project/ADRC_Make_Final_DataFrame/Clock_Data/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_POSTON_RAW_Age_prediction_mean_results.csv"
+Kercher_filepath <- "/Users/maurertm/Desktop/ADRC_Project/ADRC_Make_Final_DataFrame/Clock_Data/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_KERCHNER_RAW_Age_prediction_mean_results.csv"
+ADRC_filepath <- "/Users/maurertm/Desktop/ADRC_Project/ADRC_Make_Final_DataFrame/Clock_Data/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_ADRC_RAW_Age_prediction_mean_results.csv"
 
-phen_metadata_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/PACER/Plasma_metadata_FINAL_052021_ADRC_additionalQC_new.csv"
-chip_carriers_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/chip_carriers.txt"
-non_chip_carriers_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/non_chip_carriers.txt"
-new_ADRC_table_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/PACER/New_ADRC_Key.xlsx"
+phen_metadata_filepath <- "/Users/maurertm/Desktop/ADRC_Project/ADRC_Make_Final_DataFrame/Metadata/Plasma_metadata_FINAL_052021_ADRC_additionalQC_new.csv"
+chip_carriers_filepath <- "/Users/maurertm/Desktop/ADRC_Project/ADRC_Make_Final_DataFrame/Metadata/Chip_non_Chip_Lists/chip_carriers.txt"
+non_chip_carriers_filepath <- "/Users/maurertm/Desktop/ADRC_Project/ADRC_Make_Final_DataFrame/Metadata/Chip_non_Chip_Lists/non_chip_carriers.txt"
+new_ADRC_table_filepath <- "/Users/maurertm/Desktop/ADRC_Project/ADRC_Make_Final_DataFrame/Metadata/Filename_Header_Correction/New_ADRC_Key.xlsx"
 
-Mutect_results_with_CHIP_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/PACER/mutect_somatic_042822.csv"
+Mutect_results_with_CHIP_filepath <- "/Users/maurertm/Desktop/ADRC_Project/ADRC_Make_Final_DataFrame/mutect2_Results/mutect_somatic_042822.csv"
 
-Yanns_metadata_filepath <- "/Users/maurertm/Desktop/Projects/ADRC/Metadata/Yanns_MetaData2.csv"
+Yanns_metadata_filepath <- "/Users/maurertm/Desktop/ADRC_Project/ADRC_Make_Final_DataFrame/Metadata/Greicius_MetaData2.csv"
 
-vcf_header_incorrect_names <- "/Users/maurertm/Desktop/Projects/ADRC/csv_txt_outputs/whole_exome_normal_headers_list.txt"
-vcf_header_normal_names <- "/Users/maurertm/Desktop/Projects/ADRC/csv_txt_outputs/whole_exome_incorrect_headers_list.txt"
+vcf_header_incorrect_names <- "/Users/maurertm/Desktop/ADRC_Project/ADRC_Make_Final_DataFrame/Metadata/Filename_Header_Correction/whole_exome_normal_headers_list.txt"
+vcf_header_normal_names <- "/Users/maurertm/Desktop/ADRC_Project/ADRC_Make_Final_DataFrame/Metadata/Filename_Header_Correction/whole_exome_incorrect_headers_list.txt"
 
 ##############################################################################################
 ####################-########----Load and Combine Clock Data-----#############################
@@ -62,6 +62,7 @@ Kercher <- read_csv(Kercher_filepath)
 ADRC <- read_csv(ADRC_filepath)
 
 #Join the files
+#expect and ignore warning, it's fine
 Wagner <- as.tibble(Wagner) %>% mutate(Study = "Wagner")
 Poston <- as.tibble(Poston) %>% mutate(Study = "Poston")
 Kercher <- as.tibble(Kercher) %>% mutate(Study = "Kercher")
@@ -87,8 +88,9 @@ phen_metadata[is_in(phen_metadata$ADRC_ID, wrong_gender_adrc),]$Gender <- "F"
 ##########################-----Combine Clock and Phenotype Data-----##########################
 ##############################################################################################
 setdiff(phen_metadata$Barcode, pivot_clock$Barcode)
+#expect:character(0)
 missing_in_metadata <- setdiff(pivot_clock$Barcode, phen_metadata$Barcode)
-#"S1228665" "S1228593" "S1228625" "S1228535" "S1228669" "S1229627" "S1227123"
+#expect: "S1228665" "S1228593" "S1228625" "S1228535" "S1228669" "S1229627" "S1227123"
 clock_pivot_filtered <- filter(pivot_clock, !is_in(Barcode, missing_in_metadata))
 colnames(clock_pivot_filtered) <- c("Barcode", "Age_at_Prot_Draw", "Study_Prot_Clocks", "Adipose", "Artery", "Brain", "CognitionBrain", "Esophagus", "Heart",         
                                     "Immune", "Intestine", "Kidney", "Liver", "Lung", "Muscle", "Organismal", "Pancreas","Pituitary",     
@@ -97,7 +99,7 @@ colnames(clock_pivot_filtered) <- c("Barcode", "Age_at_Prot_Draw", "Study_Prot_C
 #join pivot_filtered and phen_metadata on barcodes
 join_on_barcodes <- left_join(phen_metadata, clock_pivot_filtered, on="Barcode") %>% filter(!is.na(Adipose))
 
-#check that there are no rows with missing clock data (this returns an empty tibble
+#check that there are no rows with missing clock data (this returns an empty tibble)
 left_join(phen_metadata, clock_pivot_filtered, on="Barcode") %>% 
   filter(is.na(Adipose))
 
@@ -164,10 +166,11 @@ colnames(non_chip_carriers) <- "Sample"
 combined_sequenced_list <- rbind(chip_carriers, non_chip_carriers) %>% distinct
 
 setdiff(as.numeric(combined_sequenced_list$Sample), as.numeric(filenames_vcf_ids$Sample))
+#expect: (and Warning Message)
 #"0428"    "0449"    "0881"    "0894"    "0919"    "1065"    "1095"    "3900049" "3900131" "3900227" "3900294"
 #"3900295" "3900318" "3900357" "3900358" "3900379" "3900385" "3900388" "3900393" "3900394" "3900400" "3900402"
 setdiff(filenames_vcf_ids$Sample, combined_sequenced_list$Sample)
-#character(0)
+#expect: character(0)
 
 complete_scg_id_df <- left_join(combined_sequenced_list, filenames_vcf_ids, by = "Sample")
 
@@ -187,7 +190,9 @@ colnames(new_bams_ADRC_IDs) <- "Sample"
 new_ids <- filter(complete_scg_id_df, is_in(Sample, mystery_bam_bais)) %>% distinct 
 new_ids$Sample <- as.numeric(new_ids$Sample)
 setdiff(new_ids$Sample, ADRC_key$Sample)
+#expect: numeric(0)
 setdiff(ADRC_key$Sample, new_ids$Sample)
+#expect: numeric(0)
 
 new_ids_joined <- left_join(new_ids, ADRC_key, by="Sample") %>% select(-Sample)
 colnames(new_ids_joined) <- c("name_of_file", "vcf_sample_header", "Sample")
@@ -204,6 +209,17 @@ updated_ids$no_leading_zero <- str_remove_all(updated_ids$Sample, "^0")
 samples_unique <-  mutate(updated_ids, no_underscore = sub("\\_.*", "", no_leading_zero)) 
 
 genotypes <- dplyr::select(samples_unique, no_underscore, name_of_file, vcf_sample_header)
+genotypes %>% group_by(no_underscore) %>% tally() %>% arrange(desc(n)) %>% filter(n>1)
+#expect:  868          2
+problematic <- genotypes %>% filter(no_underscore == "868")
+# A tibble: 2 × 3
+#filename name_of_vcf                  vcf_sample_header 
+#1 868      0868.hg38_GRCh38_mutect2.vcf "   Stanford_0868"
+#2 868      0868.hg38_GRCh38_mutect2.vcf "Stanford_0868
+problematic <- problematic[2,]
+non_problematic <- genotypes %>% filter(no_underscore != "868")
+genotypes <- rbind(problematic, non_problematic)
+
 colnames(genotypes) <- c("filename", "name_of_vcf", "vcf_sample_header")
 WGS_sample_list <- genotypes %>% select(filename) %>% as.list
 
@@ -224,21 +240,23 @@ phenotype_clocks$ADRC_ID_cleaned <- str_remove_all(phenotype_clocks$ADRC_ID, "^0
 phenotype_clocks$PIDN_files <- phenotype_clocks$PIDN_cleaned
 phenotype_clocks$PIDN_files[!is_in(phenotype_clocks$PIDN_files, genotypes$filename)] <- NA
 intersect(genotypes$filename, phenotype_clocks$PIDN_cleaned)
+#expect: 163 results
 
 phenotype_clocks$SampleID_files <- phenotype_clocks$SampleID_cleaned
 phenotype_clocks$SampleID_files[!is_in(phenotype_clocks$SampleID_files, genotypes$filename)] <- NA
 intersect(genotypes$filename, phenotype_clocks$SampleID_cleaned)
-
+#expect: 147 results
 
 phenotype_clocks$ADRC_ID_files <- phenotype_clocks$ADRC_ID_cleaned
 phenotype_clocks$ADRC_ID_files[!is_in(phenotype_clocks$ADRC_ID_files, genotypes$filename)] <- NA
 intersect(genotypes$filename, phenotype_clocks$ADRC_ID_cleaned)
+#expect: 384 results
 
 #these are the data in scg (the WGS data) that is not in the metadata file Jarod provided
 #notice there are about 11- this is what we expect
 genotypes$missing_temp <- !is_in(genotypes$filename, phenotype_clocks$PIDN_cleaned) & !is_in(genotypes$filename, phenotype_clocks$SampleID_cleaned) & !is_in(genotypes$filename, phenotype_clocks$ADRC_ID_cleaned)
 
-missing_WGS_in_metadata <- filter(genotypes, missing_temp == TRUE) %>% pull(ID)
+missing_WGS_in_metadata <- filter(genotypes, missing_temp == TRUE) %>% pull(filename)
 
 #create a column called filename that contains the scg/ WGS id
 phenotype_clocks_with_filenames <- rowwise(phenotype_clocks) %>% group_map(get_unique_value) %>% bind_rows
@@ -258,12 +276,13 @@ phenotype_clocks_with_filenames$has_WGS_data <- !is.na(phenotype_clocks_with_fil
 phenotype_clocks_with_filenames$has_clock_data <- !is.na(phenotype_clocks_with_filenames$Adipose)
 
 phenotype_clocks_with_filenames %>% filter(has_WGS_data == TRUE & has_clock_data == TRUE) %>% select(Individual_ID) %>%unique
-#541 match
+#551 match
 
 #make a columne called has_WGS_AND_proteomic_data, which contains TRUE and FALSE for if we have both data on the individual
 phenotype_clocks_with_filenames$has_WGS_AND_clock_data <- phenotype_clocks_with_filenames$has_WGS_data == TRUE & phenotype_clocks_with_filenames$has_clock_data == TRUE
 
 phenotype_clocks_with_filenames %>% filter(has_WGS_AND_clock_data) %>% pull(Individual_ID) %>% unique()
+#551 match
 
 phenotype_clocks_with_genotypes <- left_join(phenotype_clocks_with_filenames, genotypes, by = "filename")
 
@@ -333,18 +352,52 @@ table(mutect_results_all$chip_class) %>% sort
 setdiff(phenotype_clocks_with_genotypes$filename, mutect_results_all$filename)
 #NA
 missing_CHIP_filenames <- setdiff(mutect_results_all$filename, phenotype_clocks_with_genotypes$filename)
-# [1]     583     415     449     465     474     563     565     584     610     931 3900308
+#expect:  [1]     583     415     449     465     474     563     565     584     610     931 3900308
 
 setdiff(missing_CHIP_filenames, phenotype_clocks_with_genotypes$ADRC_ID_cleaned)
+#expect:  [1]     583     415     449     465     474     563     565     584     610     931 3900308
 setdiff(missing_CHIP_filenames, phenotype_clocks_with_genotypes$SampleID_cleaned)
+#expect:  [1]     583     415     449     465     474     563     565     584     610     931 3900308
 setdiff(missing_CHIP_filenames, phenotype_clocks_with_genotypes$PIDN_cleaned)
-# [1]     583     415     449     465     474     563     565     584     610     931 3900308
+#expect:  [1]     583     415     449     465     474     563     565     584     610     931 3900308
 
 #we will filter out the missing ids and then add them in seperatly (as they are joining on a different column)
 mutect_results_filtered <- filter(mutect_results_all, !is_in(filename, missing_CHIP_filenames))
 mutect_results_filtered <- transform(mutect_results_filtered, filename = as.character(filename))
 
 CHIP_phen_clocks <- left_join(phenotype_clocks_with_genotypes, mutect_results_filtered, by = "filename")
+
+CHIP_phen_clocks_missing_filename <- CHIP_phen_clocks %>% filter(is.na(filename))
+intersect(as.character(CHIP_phen_clocks_missing_filename$SampleId), as.character(mutect_results_all$Sample))
+#expect: character(0)
+intersect(as.character(CHIP_phen_clocks_missing_filename$SampleID), as.character(mutect_results_all$Sample))
+#expect: character(0)
+intersect(as.character(CHIP_phen_clocks_missing_filename$ADRC_ID), as.character(mutect_results_all$Sample))
+#expect: character(0)
+intersect(as.character(CHIP_phen_clocks_missing_filename$PIDN), as.character(mutect_results_all$Sample))
+#expect: character(0)
+intersect(as.character(CHIP_phen_clocks_missing_filename$Individual_ID), as.character(mutect_results_all$Sample))
+#expect: character(0)
+intersect(as.character(CHIP_phen_clocks_missing_filename$Barcode), as.character(mutect_results_all$Sample))
+#expect: character(0)
+intersect(as.character(CHIP_phen_clocks_missing_filename$ADRC_ID_cleaned), as.character(mutect_results_all$Sample))
+#expect: character(0)
+intersect(as.character(CHIP_phen_clocks_missing_filename$SampleID_cleaned), as.character(mutect_results_all$Sample))
+#expect: character(0)
+intersect(as.character(CHIP_phen_clocks_missing_filename$PIDN_cleaned), as.character(mutect_results_all$Sample))
+#expect: character(0)
+intersect(as.character(CHIP_phen_clocks_missing_filename$PIDN_files), as.character(mutect_results_all$Sample))
+#expect: character(0)
+intersect(as.character(CHIP_phen_clocks_missing_filename$SampleID_files), as.character(mutect_results_all$Sample))
+#expect: character(0)
+intersect(as.character(CHIP_phen_clocks_missing_filename$ADRC_ID_files), as.character(mutect_results_all$Sample))
+#expect: character(0)
+intersect(as.character(CHIP_phen_clocks_missing_filename$filename), as.character(mutect_results_all$Sample))
+#expect: character(0)
+intersect(as.character(CHIP_phen_clocks_missing_filename$name_of_vcf), as.character(mutect_results_all$Sample))
+#expect: character(0)
+intersect(as.character(CHIP_phen_clocks_missing_filename$Sample), as.character(mutect_results_all$Sample))
+#expect: character(0)
 
 #check that the number of rows in the new file is unchanged from proteomics_metadata_filename
 nrow(CHIP_phen_clocks) - nrow(phenotype_clocks_with_filenames)
@@ -363,10 +416,9 @@ CHIP_phen_clocks$chip_class2[is.na(CHIP_phen_clocks$chip_class2)] <- "Other"
 CHIP_phen_clocks$has_chip <- CHIP_phen_clocks$chip_class2 != "Control"
 CHIP_phen_clocks$chip_class2 %<>% factor(levels = c("Control", "DNMT3A", "TET2", "Multiple", "ASXL1", "Other")) 
 
-levels(CHIP_phen_clocks$chip_class2) #Show levels of factor
-
 CHIP_phen_clocks$Age_at_Draw_Difference <- CHIP_phen_clocks$Age_at_WGS_Draw - CHIP_phen_clocks$Age_at_Prot_Draw
 
 #save final df
-write_csv(CHIP_phen_clocks, "/Users/maurertm/Desktop/Chip_Phen_Clocks.csv")
-
+filepath <- '/Users/maurertm/Desktop/ADRC_Project/ADRC_Processed_DataFrames/Chip_Phen_Clocks.csv'
+time <- paste0(sub('\\..*', '', filepath), format(Sys.time(),'_%m_%d_at_%H_%M'), '.csv')
+write_csv(CHIP_phen_clocks, time)
