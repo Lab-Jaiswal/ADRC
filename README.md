@@ -1,6 +1,6 @@
 # ADRC Analysis
 ## Data Sources
-The dataframe created in Phenotype_CHIP_Clocks_Cleaning.R is derived from 12 dataframes <br />
+Once you have been approved to recieve the data from the ADRC, @maurermaggie will share the approved files with you. We are currently performing analyses on the following files <br />
 #### Aging Clock Data
 * All have filepaths "df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60" + : <br />
      * "_WAGNER_RAW_Age_prediction_mean_results.csv"
