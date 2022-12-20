@@ -59,4 +59,8 @@ Here, Sample_ID1 is *individual specific*, Sample_ID2 is *study specific*, and S
 2. Filter out all samples where `has_WGS_AND_clock_data` is FALSE (this column has TRUE or FALSE for all rows and represents if the sample has both WGS and clock data
 3. Many analyses will require you to subset the data to one blood draw per person. 
      * Using the find_closest_age function in `process_final_dataframe.R`, will allow you to select the sample for each individual that is closest by Age_at_Draw_Difference and, if tied, then by connectivity z score. 
-    
+     
+### Data Oddities
+* The Diagnosis_Group and Diagnosis_Consensus columns might not match each other within the same row
+* The Diagnosis_Group is not static and changes over time for patients
+* Some patients have multiple sexes recorded. We are currently working on calculating genetic sex from the WGS data.
