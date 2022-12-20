@@ -55,8 +55,8 @@ Here, Sample_ID1 is *individual specific*, Sample_ID2 is *study specific*, and S
 
 ### Subsetting Data
 #### If you are looking at patterns between the WGS and plasma proteome data, we reccomend filtering the data in the following ways:
-1. Filter out all samples were the `Age_at_Draw_Difference`, a column with the difference between the age at which the proteome sample and WGS sample were drawn, is greater than 4 or less than -4. This is in line with other aging studies. 
-2. Filter out all samples where `has_WGS_AND_clock_data` is FALSE (this column has TRUE or FALSE for all rows and represents if the sample has both WGS and clock data
+1. Filter out all samples where the `Age_at_Draw_Difference`, a column with the difference between the age at which the proteome sample and WGS sample were drawn, is greater than 4 or less than -4. This is in line with other aging studies. 
+2. Filter out all samples where `has_WGS_AND_clock_data` is FALSE (this column has TRUE or FALSE for all rows and represents if the sample has both WGS and clock data). 
 3. Many analyses will require you to subset the data to one blood draw per person. 
      * Using the find_closest_age function in `process_final_dataframe.R`, will allow you to select the sample for each individual that is closest by Age_at_Draw_Difference and, if tied, then by connectivity z score. 
      
