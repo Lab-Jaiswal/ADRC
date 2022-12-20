@@ -64,3 +64,4 @@ Here, Sample_ID1 is *individual specific*, Sample_ID2 is *study specific*, and S
 * The Diagnosis_Group and Diagnosis_Consensus columns might not match each other within the same row
 * The Diagnosis_Group is not static and changes over time for patients
 * Some patients have multiple sexes recorded. We are currently working on calculating genetic sex from the WGS data.
+* Because of massive variation in sample storage time and temperature, those columns are highly correlated with several plasma proteins. Please make sure to account for this in your analysis.
