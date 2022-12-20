@@ -36,22 +36,6 @@ squash_multiple_variants <- function(subject_rows, subject_df) {
 #################################-----Define Data Paths-----##################################
 ##############################################################################################
 #Import clock data from the 4 different ADRC studies
-Wagner_filepath <- "ADRC_Project/Source_Data/Aging_Clock_Data/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_WAGNER_RAW_Age_prediction_mean_results.csv"
-Poston_filepath <- "ADRC_Project/Source_Data/Aging_Clock_Data/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_POSTON_RAW_Age_prediction_mean_results.csv"
-Kercher_filepath <- "ADRC_Project/Source_Data/Aging_Clock_Data/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_KERCHNER_RAW_Age_prediction_mean_results.csv"
-ADRC_filepath <- "ADRC_Project/Source_Data/Aging_Clock_Data/df_all_tissue_bootstrap_lasso_ENRICHED_COGNITIONBRAIN_ABOVE60_ADRC_RAW_Age_prediction_mean_results.csv"
-
-phen_metadata_filepath <- "ADRC_Project/Source_Data/Metadata/Clinical_Sample_Level/Plasma_metadata_FINAL_052021_ADRC_additionalQC_new.csv"
-chip_carriers_filepath <- "ADRC_Project/Source_Data/mutect2_Results/Chip_non_Chip_Lists/chip_carriers.txt"
-non_chip_carriers_filepath <- "ADRC_Project/Source_Data/mutect2_Results/Chip_non_Chip_Lists/non_chip_carriers.txt"
-new_ADRC_table_filepath <- "ADRC_Project/Source_Data/Metadata/Filename_Correction_Keys/New_ADRC_Key.xlsx"
-
-Mutect_results_with_CHIP_filepath <- "ADRC_Project/Source_Data/mutect2_Results/mutect_somatic_042822.csv"
-
-Yanns_metadata_filepath <- "ADRC_Project/Source_Data/Metadata/Phenotype/Incomplete_Phenotype_MetaData2.csv"
-
-vcf_header_incorrect_names <- "ADRC_Project/Source_Data/Metadata/Filename_Correction_Keys/whole_exome_normal_headers_list.txt"
-vcf_header_normal_names <- "ADRC_Project/Source_Data/Metadata/Filename_Correction_Keys/whole_exome_incorrect_headers_list.txt"
 
 ##############################################################################################
 ####################-########----Load and Combine Clock Data-----#############################
@@ -419,6 +403,6 @@ CHIP_phen_clocks$chip_class2 %<>% factor(levels = c("Control", "DNMT3A", "TET2",
 CHIP_phen_clocks$Age_at_Draw_Difference <- CHIP_phen_clocks$Age_at_WGS_Draw - CHIP_phen_clocks$Age_at_Prot_Draw
 
 #save final df
-filepath <- 'ADRC_Project/Processed_DataFrames/Chip_Phen_Clocks.csv'
+
 time <- paste0(sub('\\..*', '', filepath), format(Sys.time(),'_%m_%d_at_%H_%M'), '.csv')
 write_csv(CHIP_phen_clocks, time)
