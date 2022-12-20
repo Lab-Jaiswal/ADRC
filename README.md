@@ -10,18 +10,18 @@
      * "_ADRC_RAW_Age_prediction_mean_results.csv"
 #### Phenotype Metadata
 * Source: Greicius Lab, Wyss-Coray Lab, RedCap
-      * File: "ADRC_Project/Source_Data/Metadata/Phenotype/Incomplete_Phenotype_MetaData2.csv"
+    * File: "ADRC_Project/Source_Data/Metadata/Phenotype/Incomplete_Phenotype_MetaData2.csv"
 #### Clinical and Sample Level Metadata
 * Source: Montgomery Lab
-      * File: "ADRC_Project/Source_Data/Metadata/Clinical_Sample_Level/Plasma_metadata_FINAL_052021_ADRC_additionalQC_new.csv"
+    * File: "ADRC_Project/Source_Data/Metadata/Clinical_Sample_Level/Plasma_metadata_FINAL_052021_ADRC_additionalQC_new.csv"
 #### Filename correction keys
 * We recieved WGS files from multiple sources, resulting in two problems: <br />
      1. In some cases, the vcf header name does not match the file name
-          * To fix this, the following two files are necesssary: 
+        * To fix this, the following two files are necesssary: 
                * "ADRC_Project/Source_Data/Metadata/Filename_Correction_Keys/whole_exome_incorrect_headers_list.txt"
                * "ADRC_Project/Source_Data/Metadata/Filename_Correction_Keys/whole_exome_normal_headers_list.txt"
      2. In others, the file name does not match any identifiers in the provided phenotype metadata with using a "key" given from the ADRC
-          * "ADRC_Project/Source_Data/Metadata/Filename_Correction_Keys/New_ADRC_Key.xlsx"
+        * "ADRC_Project/Source_Data/Metadata/Filename_Correction_Keys/New_ADRC_Key.xlsx"
 #### Mutect2 Results
 * "ADRC_Project/Source_Data/mutect2_Results/mutect_somatic_042822.csv"
 * "ADRC_Project/Source_Data/mutect2_Results/Chip_non_Chip_Lists/chip_carriers.txt"
