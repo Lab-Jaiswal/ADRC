@@ -1,6 +1,7 @@
 library(readxl)
 library(magrittr)
 library(stringr)
+library(arrow)
 library(tidyverse)
 
 choose_best <- function(metadata_rows, metadata_df) { 
@@ -32,6 +33,23 @@ squash_multiple_variants <- function(subject_rows, subject_df) {
   subject_rows_wider
 }
 
+filter_results <- function(dataframe){
+  pass <- dataframe %>%
+    mutate(CT = if_else(
+      (REF=="C" & ALT =="T") | (REF=="T" & ALT =="C") | (REF=="G" & ALT =="A") | (REF=="A" & ALT =="G"), true="yes", false="no"))
+  
+  pass_filter <- pass %>%
+    filter (CT == "yes") %>%
+    filter (TLOD > 10) %>%
+    filter (VAF < 0.3) %>%
+    filter (VAF > 0.0) %>%
+    filter (AD>1) %>%
+    count(NWD_ID)
+  
+  pass_filter
+  
+}
+
 ##############################################################################################
 #################################-----Define Data Paths-----##################################
 ##############################################################################################
@@ -52,6 +70,13 @@ Yanns_metadata_filepath <- "ADRC_Project/Source_Data/Metadata/Phenotype/Incomple
 
 vcf_header_incorrect_names <- "ADRC_Project/Source_Data/Metadata/Filename_Correction_Keys/whole_exome_normal_headers_list.txt"
 vcf_header_normal_names <- "ADRC_Project/Source_Data/Metadata/Filename_Correction_Keys/whole_exome_incorrect_headers_list.txt"
+
+parquet_fp <- "/ADRC_Project/Results/PACER/singletons_2023_02_03.parquet"
+parquet_old_fp <- "/ADRC_Project/Results/PACER/pacer_output.tsv"
+parquet_100_fp <- "/ADRC_Project/Results/PACER/singletons_2023_02_05_100.parquet"
+parquet_200_fp <- "/ADRC_Project/Results/PACER/singletons_2023_02_05_200.parquet"
+parquet_300_fp <- "/ADRC_Project/Results/PACER/singletons_2023_02_06_300.parquet"
+parquet_400_fp<- "/ADRC_Project/Results/PACER/singletons_2023_02_06_400.parquet"
 
 ##############################################################################################
 ####################-########----Load and Combine Clock Data-----#############################
@@ -404,8 +429,10 @@ nrow(CHIP_phen_clocks) - nrow(phenotype_clocks_with_filenames)
 
 
 ##############################################################################################
-##############-----Processing: Mutation Type Split, Age at Draw Difference-----###############
+##################################-----Processing-----########################################
 ##############################################################################################
+
+################################-----Mutation Type Split-----#################################
 CHIP_phen_clocks$chip_class2 <- NA
 CHIP_phen_clocks$chip_class2[CHIP_phen_clocks$chip_class == "DNMT3A"] <- "DNMT3A"
 CHIP_phen_clocks$chip_class2[CHIP_phen_clocks$chip_class == "TET2"] <- "TET2"
@@ -416,9 +443,46 @@ CHIP_phen_clocks$chip_class2[is.na(CHIP_phen_clocks$chip_class2)] <- "Other"
 CHIP_phen_clocks$has_chip <- CHIP_phen_clocks$chip_class2 != "Control"
 CHIP_phen_clocks$chip_class2 %<>% factor(levels = c("Control", "DNMT3A", "TET2", "Multiple", "ASXL1", "Other")) 
 
+################################-----Age at Draw-----#################################
 CHIP_phen_clocks$Age_at_Draw_Difference <- CHIP_phen_clocks$Age_at_WGS_Draw - CHIP_phen_clocks$Age_at_Prot_Draw
 
-#save final df
-filepath <- 'ADRC_Project/Processed_DataFrames/Chip_Phen_Clocks.csv'
+############################-----Singletons Resids-----################################
+parquet <- read_parquet("/Users/maurertm/Desktop/ADRC_Project/Results/PACER/singletons_2023_02_03.parquet")
+parquet_old <- read_tsv("/Users/maurertm/Desktop/ADRC_Project/Results/PACER/pacer_output.tsv")
+parquet_100 <- read_parquet("/Users/maurertm/Desktop/ADRC_Project/Results/PACER/singletons_2023_02_05_100.parquet")
+parquet_200 <- read_parquet("/Users/maurertm/Desktop/ADRC_Project/Results/PACER/singletons_2023_02_05_200.parquet")
+parquet_300 <- read_parquet("/Users/maurertm/Desktop/ADRC_Project/Results/PACER/singletons_2023_02_06_300.parquet")
+parquet_400 <- read_parquet("/Users/maurertm/Desktop/ADRC_Project/Results/PACER/singletons_2023_02_06_400.parquet")
+
+tallied_sample_ids <- parquet %>% filter_results()
+colnames(tallied_sample_ids) <- c("NWD_ID", "all_analysis_n")
+
+tallied_sample_ids_old <- parquet_old  %>% filter_results() 
+colnames(tallied_sample_ids_old) <- c("NWD_ID", "old_analysis_n")
+
+tallied_sample_ids_100 <- parquet_100  %>% filter_results()
+colnames(tallied_sample_ids_100) <- c("NWD_ID", "100_analysis_n")
+
+tallied_sample_ids_200 <- parquet_200  %>% filter_results()
+colnames(tallied_sample_ids_200) <- c("NWD_ID", "200_analysis_n")
+
+tallied_sample_ids_300 <- parquet_300  %>% filter_results()
+colnames(tallied_sample_ids_300) <- c("NWD_ID", "300_analysis_n")
+
+tallied_sample_ids_400 <- parquet_400  %>% filter_results()
+colnames(tallied_sample_ids_400) <- c("NWD_ID", "400_analysis_n")
+
+joined_old_new <- left_join(tallied_sample_ids, tallied_sample_ids_400) %>% 
+  left_join(tallied_sample_ids_old) %>%
+  left_join(tallied_sample_ids_300) %>%
+  left_join(tallied_sample_ids_200) %>%
+  left_join(tallied_sample_ids_100) 
+
+colnames(joined_old_new) <- c("vcf_sample_header", "all_analysis_n", "400_analysis_n", "old_analysis_n", "300_analysis_n", "200_analysis_n", "100_analysis_n")
+CHIP_phen_clocks_pacer <- left_join(CHIP_phen_clocks, joined_old_new, by="vcf_sample_header")
+
+
+############################-----Save Output-----################################
+filepath <- 'ADRC_Project/Processed_DataFrames/Chip_Phen_Clock.csv'
 time <- paste0(sub('\\..*', '', filepath), format(Sys.time(),'_%m_%d_at_%H_%M'), '.csv')
 write_csv(CHIP_phen_clocks, time)
